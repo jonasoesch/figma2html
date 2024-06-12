@@ -63,7 +63,7 @@ export default ({ node, filename, widthRange, alt, config, variables }) => {
 		class: 'f2h-img',
 		alt: alt,
 		'data-src': filename + '.' + format,
-		src: 'data:image/gif;base64,R0lGODlhCgAKAIAAAB8fHwAAACH5BAEAAAAALAAAAAAKAAoAAAIIhI+py+0PYysAOw==',
+		src: filename + '.' + format, //'data:image/gif;base64,R0lGODlhCgAKAIAAAB8fHwAAACH5BAEAAAAALAAAAAAKAAoAAAIIhI+py+0PYysAOw==',
 		loading: 'lazy',
 		draggable: 'false',
 		decoding: 'async',

@@ -1,3 +1,3 @@
 export default (id) => {
-	return `#${id} { position: relative; overflow: hidden; display: none; }\n`;
+	return `#${id} { position: relative; overflow: hidden; }\n`;
 };

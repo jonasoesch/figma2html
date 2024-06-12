@@ -71,7 +71,7 @@ export default (containerId: string) => {
 					if (!waiting) selectChildren(`.${nameSpace}f2h-img`, el).forEach(updateImgSrc);
 					el.style.display = 'block';
 				} else {
-					el.style.display = 'none';
+					el.style.display = 'block'; // 'none'
 				}
 			});
 
