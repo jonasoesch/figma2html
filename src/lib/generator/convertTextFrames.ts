@@ -183,7 +183,7 @@ export default (textFrames: TextNode[], artboard: FrameNode) => {
 			width:
 				textFrame.textAutoResize === 'WIDTH_AND_HEIGHT'
 					? 'auto'
-					: `${textFrame.width.toFixed(2)}px`,
+					: `${((textFrame.width / artboard.width) * 100).toFixed(2)}%`,
 			opacity: textFrame.opacity,
 			translate: `${translateX}%, ${translateY}%`,
 			rotation: textFrame.rotation * -1,
