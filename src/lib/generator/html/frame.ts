@@ -136,7 +136,7 @@ export default ({ node, filename, widthRange, alt, config, variables }) => {
 
 			const { style: customStyle, ...restCustomAttributes } = text.customAttributes;
 
-			const attrs = stringify.attrs({
+			let attrs = stringify.attrs({
 				...restCustomAttributes,
 				class: `f2h-text${' ' + text.customAttributes.class || ''}`,
 				style:
@@ -145,6 +145,8 @@ export default ({ node, filename, widthRange, alt, config, variables }) => {
 						effect
 					}) + (customStyle || '')
 			});
+			// Avoid having 'effect: text-shadow: 2px 2px 2px black;' in the html
+			attrs = attrs.replace('effect: ', '');
 
 			el += `<div ${attrs}>`;
 
@@ -179,6 +181,5 @@ export default ({ node, filename, widthRange, alt, config, variables }) => {
 	}
 
 	frameContent.html += `\t</div>\n`;
-
 	return frameContent;
 };
