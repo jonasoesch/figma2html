@@ -46,5 +46,5 @@ export default ({ id, config, css }) => {
 			)
 			.join('\n\n') + `\n\n${css}`;
 
-	return computedStyles;
+	return computedStyles.replace('GT America', 'GT-America');
 };

@@ -4,7 +4,7 @@
 	import Checkbox from '../Inputs/Checkbox.svelte';
 
 	const {
-		config: { applyStyleNames, includeGoogleFonts, styleTextSegments }
+		config: { applyStyleNames, styleTextSegments }
 	} = getContext('App');
 </script>
 
@@ -18,10 +18,5 @@
 		label="Include Figma styles as classes"
 		bind:value={$applyStyleNames}
 		bind:checked={$applyStyleNames}
-	/>
-	<Checkbox
-		label="Include Google fonts"
-		bind:value={$includeGoogleFonts}
-		bind:checked={$includeGoogleFonts}
 	/>
 </div>

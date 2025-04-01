@@ -38,7 +38,6 @@
 	const centered = writable(false as boolean);
 	const applyStyleNames = writable(false as boolean);
 	const styleTextSegments = writable(true as boolean);
-	const includeGoogleFonts = writable(true as boolean);
 	const maxWidth = writable(undefined as number | undefined);
 	const imagePath = writable(undefined as string | undefined);
 	const alt = writable(undefined as string | undefined);
@@ -71,7 +70,6 @@
 		alt.set(config.alt);
 		applyStyleNames.set(config.applyStyleNames);
 		styleTextSegments.set(config.styleTextSegments);
-		includeGoogleFonts.set(config.includeGoogleFonts);
 		customScript.set(config.customScript);
 	};
 
@@ -90,7 +88,6 @@
 		alt: $alt,
 		applyStyleNames: $applyStyleNames,
 		styleTextSegments: $styleTextSegments,
-		includeGoogleFonts: $includeGoogleFonts,
 		customScript: $customScript
 	});
 
@@ -252,7 +249,6 @@
 			alt,
 			applyStyleNames,
 			styleTextSegments,
-			includeGoogleFonts,
 			customScript
 		},
 		variables

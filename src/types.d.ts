@@ -13,7 +13,6 @@ declare global {
 		alt: string;
 		applyStyleNames: boolean;
 		styleTextSegments: boolean;
-		includeGoogleFonts: boolean;
 		customScript: string;
 	}
 

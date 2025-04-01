@@ -55,7 +55,6 @@ const defaults = {
 		alt: null,
 		applyStyleNames: true,
 		styleTextSegments: true,
-		includeGoogleFonts: true,
 		customScript: null
 	} as Config,
 	size: { w: 960, h: 500 } as Size,
