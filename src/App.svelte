@@ -43,6 +43,8 @@
 	const imagePath = writable(undefined as string | undefined);
 	const alt = writable(undefined as string | undefined);
 	const customScript = writable(undefined as string | undefined);
+	const pageName = writable('');
+	const pageId = writable('');
 
 	const preview = writable({
 		total: 0 as number,
@@ -105,6 +107,8 @@
 				const config: Config = message.config;
 				panels.set(message.panels);
 				receiveConfig(config);
+				pageName.set(message.pageName);
+				pageId.set(message.pageId);
 				break;
 			}
 
@@ -238,6 +242,8 @@
 		loading,
 		error,
 		preview,
+		pageName,
+		pageId,
 		config: {
 			filename,
 			format,
@@ -262,6 +268,9 @@
 <h1 class="sr-only">{name}</h1>
 
 <article class="flex h-screen flex-col flex-nowrap">
+	<div class="border-b border-figma-border bg-figma-bg-secondary px-4 py-2 text-sm">
+		Current Page: {$pageName}
+	</div>
 	<div class="grid w-full flex-auto grid-cols-3 overflow-hidden bg-figma-bg text-figma-text">
 		<div
 			class="col-span-1 flex flex-col overflow-y-scroll border-r border-solid border-figma-border"

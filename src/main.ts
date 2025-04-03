@@ -71,25 +71,31 @@ const defaults = {
 
 /**
  * STORED DATA
- * Interface with data in clientStorage
- * @see {@link https://www.figma.com/plugin-docs/api/figma-clientStorage/|ClientStorage}
+ * Interface with data in clientStorage with page-specific implementation
  */
 class Stored {
+	/**
+	 * Generate a storage key specific to the current page
+	 */
+	static getPageKey = (key: string) => `${key}-${figma.currentPage.id}`;
+
 	/**
 	 * PANELS.
 	 * Sections of the UI to show/hide by default
 	 */
 	static panels = class {
 		static get = async (): Promise<Panels> => {
-			const panels = await figma.clientStorage.getAsync('panels');
+			const panels = await figma.clientStorage.getAsync(Stored.getPageKey('panels'));
 			return panels ?? defaults.panels;
 		};
+
 		static set = async (panels: Panels): Promise<Panels> => {
-			await figma.clientStorage.setAsync('panels', panels);
+			await figma.clientStorage.setAsync(Stored.getPageKey('panels'), panels);
 			return panels;
 		};
+
 		static clear = async (): Promise<void> => {
-			await figma.clientStorage.deleteAsync('panels');
+			await figma.clientStorage.deleteAsync(Stored.getPageKey('panels'));
 			Stored.panels.set(defaults.panels);
 		};
 	};
@@ -98,18 +104,18 @@ class Stored {
 	 * SIZE
 	 */
 	static size = class {
-		static get = async () => {
-			const _size = await figma.clientStorage.getAsync('size');
-			return _size ?? defaults.size;
+		static get = async (): Promise<Size> => {
+			const size = await figma.clientStorage.getAsync(Stored.getPageKey('size'));
+			return size ?? defaults.size;
 		};
 
-		static set = async (_size: { w: number; h: number }) => {
-			await figma.clientStorage.setAsync('size', _size);
-			return _size;
+		static set = async (size: Size): Promise<Size> => {
+			await figma.clientStorage.setAsync(Stored.getPageKey('size'), size);
+			return size;
 		};
 
 		static clear = async (): Promise<void> => {
-			await figma.clientStorage.deleteAsync('size');
+			await figma.clientStorage.deleteAsync(Stored.getPageKey('size'));
 			Stored.size.set(defaults.size);
 		};
 	};
@@ -118,7 +124,11 @@ class Stored {
 	 * VARIABLES
 	 */
 	static variables = class {
-		static frame = (): TextNode => variablesFrame;
+		static frame = (): TextNode => {
+			return figma.currentPage.findChild(
+				(node) => node.type === 'FRAME' && node.name === `f2h-variables-${figma.currentPage.id}`
+			)?.children?.[0] as TextNode;
+		};
 
 		static toJSON = (text: string): Variables => {
 			try {
@@ -158,31 +168,36 @@ class Stored {
 		};
 
 		static get = (): Variables => {
-			const characters = Stored.variables.frame().characters;
+			const frame = Stored.variables.frame();
+			if (!frame) return defaults.variables;
+
+			const characters = frame.characters;
 			if (characters) {
 				const variables = Stored.variables.toJSON(characters) ?? {};
-				Stored.variables.write(variables as Variables);
+				Stored.variables.write(variables);
 
 				figma.ui.postMessage({
 					type: 'variables',
 					variables: variables
 				});
 
-				return variables as Variables;
-			} else {
-				figma.ui.postMessage({
-					type: 'variables',
-					variables: {}
-				});
-
-				return defaults.variables;
+				return variables;
 			}
+
+			figma.ui.postMessage({
+				type: 'variables',
+				variables: {}
+			});
+
+			return defaults.variables;
 		};
 
 		static write = async (variables = defaults.variables): Promise<void> => {
-			await loadFonts(Stored.variables.frame());
+			const frame = Stored.variables.frame();
+			if (!frame) return;
 
-			Stored.variables.frame().characters = Stored.variables.toString(variables);
+			await loadFonts(frame);
+			frame.characters = Stored.variables.toString(variables);
 
 			figma.ui.postMessage({
 				type: 'variables',
@@ -190,7 +205,6 @@ class Stored {
 			});
 		};
 
-		// inject only writes to text nodes that are WHOLLY variable, partials are injected only on export
 		static inject = async (
 			variables = Stored.variables.get()
 		): Promise<Record<string, { value: string; nodes: TextNode[] }>> => {
@@ -198,30 +212,27 @@ class Stored {
 
 			const keyedVariables = Stored.variables.keyed(variables);
 
+			// Only search in current page's frames
 			const artboards = figma.currentPage.findAll(
 				(node) => node.type === 'FRAME' && isFigma2htmlFrame(node)
 			) as FrameNode[];
+
 			if (artboards.length === 0) return;
 
-			// iterate through artboards and find all text nodes, grouping according to key
 			for (let i = 0; i < artboards.length; i++) {
 				const artboard = artboards[i];
 				const allTextNodes = artboard.findAllWithCriteria({ types: ['TEXT'] });
 
 				for (let j = 0; j < allTextNodes.length; j++) {
 					const node = allTextNodes[j];
-
-					// skip if not a variable
 					const variable = textNodeVariable(node, { whole: true, partial: true });
 
 					if (!variable?.value) continue;
 
-					// get variable name
 					const key = getVariableNameFromText(node.name);
 					const isActiveVariable = key in keyedVariables;
 					if (!isActiveVariable) continue;
 
-					// add node to keyGroups
 					keyedVariables[key].nodes.push({
 						node: node,
 						partial: !!variable?.partial,
@@ -233,7 +244,6 @@ class Stored {
 				}
 			}
 
-			// iterate through each group and replace text content, retaining variable name and erroring if missing nodes
 			for (const [key, { value, nodes, partial, whole }] of Object.entries(keyedVariables)) {
 				figma.notify(
 					`Found ${whole} whole & ${partial} partial variable text nodes for {{${key}}}.`,
@@ -243,19 +253,14 @@ class Stored {
 					}
 				);
 
-				// iterate through text nodes and inject variable text content
 				for (let i = 0; i < nodes.length; i++) {
 					const { node, whole } = nodes[i];
-
-					if (!whole) continue; // skip non-whole variables
+					if (!whole) continue;
 
 					const textContent = extractTextFromHTML(value);
-
 					if (!textContent) continue;
 
 					await loadFonts(node);
-
-					// set the node's text content as the pure text, retaining the variable name
 					node.autoRename = false;
 					node.characters = textContent;
 				}
@@ -265,7 +270,7 @@ class Stored {
 		};
 
 		static clear = async (): Promise<void> => {
-			await figma.clientStorage.deleteAsync('variables');
+			await figma.clientStorage.deleteAsync(Stored.getPageKey('variables'));
 			Stored.variables.write(defaults.variables);
 		};
 	};
@@ -274,7 +279,11 @@ class Stored {
 	 * CONFIG
 	 */
 	static config = class {
-		static frame = (): TextNode => settingsFrame;
+		static frame = (): TextNode => {
+			return figma.currentPage.findChild(
+				(node) => node.type === 'FRAME' && node.name === `f2h-settings-${figma.currentPage.id}`
+			)?.children?.[0] as TextNode;
+		};
 
 		static toJSON = (text: string): Config => {
 			try {
@@ -288,7 +297,6 @@ class Stored {
 				const result = Object.fromEntries(keyValuePairs) as Config;
 				const autotyped = autoType(result);
 
-				// account for legacy scales, which were string & by quotes
 				if (typeof autotyped.scale === 'string') {
 					autotyped.scale = autotyped.scale?.match(/([0-9]+)/)?.[1];
 				} else {
@@ -315,25 +323,26 @@ class Stored {
 		};
 
 		static get = async (): Promise<Config> => {
-			const _config = await figma.clientStorage.getAsync('config');
-			return _config || defaults.config;
+			const config = await figma.clientStorage.getAsync(Stored.getPageKey('config'));
+			return config || defaults.config;
 		};
 
-		static set = async (_config: Config): Promise<Config> => {
-			await figma.clientStorage.setAsync('config', _config);
-			return _config;
+		static set = async (config: Config): Promise<Config> => {
+			await figma.clientStorage.setAsync(Stored.getPageKey('config'), config);
+			return config;
 		};
 
 		static clear = async (): Promise<void> => {
-			await figma.clientStorage.deleteAsync('config');
+			await figma.clientStorage.deleteAsync(Stored.getPageKey('config'));
 			Stored.config.write(defaults.config);
 		};
 
-		// write the config to a text node on the current page
 		static write = async (config = defaults.config): Promise<void> => {
-			await loadFonts(Stored.config.frame());
+			const frame = Stored.config.frame();
+			if (!frame) return;
 
-			Stored.config.frame().characters = Stored.config.toString(config);
+			await loadFonts(frame);
+			frame.characters = Stored.config.toString(config);
 
 			figma.ui.postMessage({
 				type: 'config',
@@ -341,19 +350,31 @@ class Stored {
 			});
 		};
 
-		// find text node named "settings" and load
 		static load = async (): Promise<void> => {
-			const characters = Stored.config.frame().characters;
+			const frame = Stored.config.frame();
+			if (!frame) return;
 
+			const characters = frame.characters;
 			if (characters) {
-				const config = (await Stored.config.toJSON(characters)) as Config;
-
+				const config = Stored.config.toJSON(characters);
 				figma.ui.postMessage({
 					type: 'config',
 					config: config
 				});
 			}
 		};
+	};
+
+	/**
+	 * Clear all stored data for the current page
+	 */
+	static clearAll = async (): Promise<void> => {
+		await Promise.all([
+			Stored.panels.clear(),
+			Stored.size.clear(),
+			Stored.variables.clear(),
+			Stored.config.clear()
+		]);
 	};
 }
 
@@ -367,7 +388,7 @@ class TempFrame {
 		}
 
 		this.frame = figma.createFrame();
-		this.frame.name = '[figma2html]';
+		this.frame.name = `[figma2html-temp-${figma.currentPage.id}]`;
 		this.frame.clipsContent = false;
 	};
 
@@ -382,13 +403,14 @@ interface NewConfigFrame {
 	x?: number;
 	y?: number;
 	text: Config | Variables | string;
-	// eslint-disable-next-line no-unused-vars
 	parser: (obj: Config | Variables | string) => string;
 }
 
+const getConfigGroupName = () => `figma2html-${figma.currentPage.id}`;
+
 const newConfigFrame = ({ name, text, parser }: NewConfigFrame) => {
 	const frameNode = figma.createFrame();
-	frameNode.name = name;
+	frameNode.name = `${name}-${figma.currentPage.id}`;
 	frameNode.locked = true;
 	frameNode.primaryAxisSizingMode = 'AUTO';
 	frameNode.counterAxisSizingMode = 'AUTO';
@@ -421,16 +443,15 @@ let settingsFrame: TextNode;
 let variablesFrame: TextNode;
 
 // CONFIG GROUP + FRAMES
-// write the config to a text node on the current page. users should not be able to edit this text node, but we have no way of locking them. We add a note to warn users and then add the settings + variables frames.
 let configGroupNode: FrameNode = figma.currentPage.findChild(
-	(node) => node.type === 'FRAME' && node.name === 'figma2html'
+	(node) => node.type === 'FRAME' && node.name === getConfigGroupName()
 ) as FrameNode;
 
 if (configGroupNode) {
 	// find settings frame in existing group
 	settingsFrame = (
 		configGroupNode.findChild(
-			(node) => node.type === 'FRAME' && node.name === 'f2h-settings'
+			(node) => node.type === 'FRAME' && node.name === `f2h-settings-${figma.currentPage.id}`
 		) as FrameNode
 	)?.children?.[0] as TextNode;
 
@@ -447,7 +468,7 @@ if (configGroupNode) {
 	// find variables frame in existing group
 	variablesFrame = (
 		configGroupNode.findChild(
-			(node) => node.type === 'FRAME' && node.name === 'f2h-variables'
+			(node) => node.type === 'FRAME' && node.name === `f2h-variables-${figma.currentPage.id}`
 		) as FrameNode
 	)?.children?.[0] as TextNode;
 
@@ -464,7 +485,7 @@ if (configGroupNode) {
 	const frameNode = figma.createFrame();
 	frameNode.x = figma.currentPage.children.reduce((min, node) => Math.min(min, node.x), 0) - 450;
 	frameNode.y = figma.currentPage.children.reduce((min, node) => Math.min(min, node.y), 0);
-	frameNode.name = 'figma2html';
+	frameNode.name = getConfigGroupName();
 	frameNode.layoutMode = 'VERTICAL';
 	frameNode.primaryAxisSizingMode = 'AUTO';
 	frameNode.counterAxisSizingMode = 'FIXED';
@@ -503,7 +524,7 @@ if (configGroupNode) {
 	});
 
 	const metaGroup = figma.createFrame();
-	metaGroup.name = 'f2h-meta';
+	metaGroup.name = `f2h-meta-${figma.currentPage.id}`;
 	metaGroup.primaryAxisSizingMode = 'AUTO';
 	metaGroup.counterAxisSizingMode = 'AUTO';
 	metaGroup.layoutMode = 'VERTICAL';
@@ -516,7 +537,6 @@ if (configGroupNode) {
 	metaGroup.appendChild(textWarningNode);
 
 	// create variables frame, but first check if legacy versions exist
-
 	const legacyVariablesFrame = figma.currentPage.findChild(
 		(node) => node.type === 'FRAME' && node.name === 'f2h-variables'
 	) as FrameNode;
@@ -541,7 +561,6 @@ if (configGroupNode) {
 	});
 
 	// create settings frame, but first check if legacy versions exist
-
 	const legacySettingsFrame = figma.currentPage.findChild(
 		(node) => node.type === 'FRAME' && node.name === 'f2h-settings'
 	) as FrameNode;
@@ -614,7 +633,6 @@ const getFile = async (
 	};
 };
 
-// TODO: clean up these declarations. values are immediately overwriten, making it hard to follow
 const getAssets = async (
 	exportables: readonly Exportable[],
 	config: Config,
@@ -652,7 +670,6 @@ const getAssets = async (
 		}
 
 		asset.node = grouplessNode;
-		// asset.node = originalNode;
 
 		// generate image data
 		const baseExportConfig = {
@@ -676,9 +693,6 @@ const getAssets = async (
 		);
 
 		try {
-			/**
-			 * @see {@link https://www.figma.com/plugin-docs/api/properties/nodes-exportasync/|.exportAsync()}
-			 */
 			asset.data = await (<ExportMixin>modifiedNode).exportAsync(settings);
 		} catch (exportable) {
 			log(exportable);
@@ -687,24 +701,17 @@ const getAssets = async (
 		assets.push(asset);
 	}
 
-	// tempFrame.remove();
-
 	return assets;
 };
 
-// TODO: can this function be folded into getAssets?
 const withModificationsForText = (node: FrameNode): FrameNode => {
-	// Convert all instances, components, and frames to groups. This is so positioning of text layers is absolute relative to the base frame instead of its parent, which isn't accounted for in the html.
-
-	// find all components and component instances within the frame
+	// Convert all instances, components, and frames to groups
 	const nodesToConvert = node.findAllWithCriteria({ types: ['COMPONENT', 'INSTANCE', 'FRAME'] });
 
-	// detach all components and component instances
 	for (const nodeToConvert of nodesToConvert) {
 		if (nodeToConvert.type === 'INSTANCE') createGroupFromFrame(nodeToConvert.detachInstance());
 		else if (nodeToConvert.type === 'COMPONENT') createGroupFromComponent(nodeToConvert);
 		else if (nodeToConvert.type === 'FRAME') {
-			// if nodeToConvert has any children that are text nodes, convert it to a group
 			const textNodes = nodeToConvert.findAllWithCriteria({ types: ['TEXT'] });
 			if (textNodes.length > 0) createGroupFromFrame(nodeToConvert);
 		}
@@ -716,7 +723,6 @@ const withModificationsForText = (node: FrameNode): FrameNode => {
 const withModificationsForExport = (node: FrameNode, config: Config): FrameNode => {
 	const textNodes = node.findAllWithCriteria({ types: ['TEXT'] });
 
-	// remove all hidden text layers. if testingMode is true, fade all visible text layers. if false, hide all visible text layers.
 	for (const node of textNodes) {
 		if (!isNodeVisible(node)) node.remove();
 		else if (config.testingMode) node.opacity = 0.2;
@@ -725,9 +731,6 @@ const withModificationsForExport = (node: FrameNode, config: Config): FrameNode 
 
 	return node;
 };
-
-// Inspired by Naftali Beder https://github.com/naftalibeder/figma-frame-exporter
-const thumbSize = { w: 32, h: 32 };
 
 const refreshPreview = async (config: Config | undefined, variables: Variables | undefined) => {
 	const exportables = getExportables();
@@ -742,7 +745,10 @@ const refreshPreview = async (config: Config | undefined, variables: Variables |
 		return;
 	}
 
-	const assets: Asset[] = await getAssets(exportables, config, { isFinal: false, thumbSize });
+	const assets: Asset[] = await getAssets(exportables, config, {
+		isFinal: false,
+		thumbSize: { w: 32, h: 32 }
+	});
 	const file: HTMLFile = await getFile(config, assets, variables);
 
 	tempFrame.remove();
@@ -780,24 +786,35 @@ figma.ui.onmessage = async (message) => {
 			figma.ui.resize(size.w, size.h);
 
 			config = await Stored.config.get();
-
 			variables = await Stored.variables.get();
 			panels = await Stored.panels.get();
 
 			log('Loaded stored config');
 			log('Loaded stored variables');
 
-			figma.ui.postMessage({ type: 'load', config, variables, panels });
+			figma.ui.postMessage({
+				type: 'load',
+				config,
+				variables,
+				panels,
+				pageName: figma.currentPage.name,
+				pageId: figma.currentPage.id
+			});
+
 			await refreshPreview(config, variables);
 			break;
 		}
 
-		case 'panel':
-			if (message.panels) panels = await Stored.panels.set(message.panels);
+		case 'panels':
+			if (message.panels) {
+				panels = await Stored.panels.set(message.panels);
+			}
 			break;
 
 		case 'resize': {
-			if (message.size) size = await Stored.size.set(message.size);
+			if (message.size) {
+				size = await Stored.size.set(message.size);
+			}
 			figma.ui.resize(size.w, size.h);
 			break;
 		}
@@ -806,7 +823,9 @@ figma.ui.onmessage = async (message) => {
 			figma.ui.postMessage({ type: 'loading', loading: true });
 			config = await Stored.config.set(message.config);
 			variables = await Stored.variables.get();
-			if (message.panels) panels = await Stored.panels.set(message.panels);
+			if (message.panels) {
+				panels = await Stored.panels.set(message.panels);
+			}
 			await refreshPreview(config, variables);
 			break;
 		}
@@ -821,6 +840,7 @@ figma.ui.onmessage = async (message) => {
 			await Stored.config.clear();
 			await Stored.size.clear();
 			await Stored.panels.clear();
+			await Stored.variables.clear();
 
 			config = await Stored.config.get();
 			variables = await Stored.variables.get();
@@ -829,7 +849,14 @@ figma.ui.onmessage = async (message) => {
 
 			figma.ui.resize(size.w, size.h);
 
-			figma.ui.postMessage({ type: 'load', config, variables, panels, size });
+			figma.ui.postMessage({
+				type: 'load',
+				config,
+				variables,
+				panels,
+				pageName: figma.currentPage.name,
+				pageId: figma.currentPage.id
+			});
 
 			await refreshPreview(config, variables);
 			break;
@@ -848,7 +875,14 @@ figma.ui.onmessage = async (message) => {
 			variables = await Stored.variables.get();
 			panels = await Stored.panels.get();
 			log('Loaded stored config');
-			figma.ui.postMessage({ type: 'load', config, variables, panels });
+			figma.ui.postMessage({
+				type: 'load',
+				config,
+				variables,
+				panels,
+				pageName: figma.currentPage.name,
+				pageId: figma.currentPage.id
+			});
 			await refreshPreview(config, variables);
 			break;
 		}
@@ -871,6 +905,7 @@ figma.ui.onmessage = async (message) => {
 	}
 };
 
+// Event Listeners
 figma.on('close', () => {
 	tempFrame.remove();
 	if (configGroupNode) {
@@ -879,4 +914,29 @@ figma.on('close', () => {
 	}
 	log('closed');
 	return;
+});
+
+// Add page change listener to update UI when page changes
+figma.on('currentpagechange', async () => {
+	// Reset configGroupNode for new page
+	configGroupNode = figma.currentPage.findChild(
+		(node) => node.type === 'FRAME' && node.name === getConfigGroupName()
+	) as FrameNode;
+
+	// Load page-specific settings
+	const config = await Stored.config.get();
+	const variables = await Stored.variables.get();
+	const panels = await Stored.panels.get();
+
+	// Update UI with new page settings
+	figma.ui.postMessage({
+		type: 'load',
+		config,
+		variables,
+		panels,
+		pageName: figma.currentPage.name,
+		pageId: figma.currentPage.id
+	});
+
+	await refreshPreview(config, variables);
 });
