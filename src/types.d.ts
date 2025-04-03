@@ -86,6 +86,15 @@ declare global {
 		variables?: Variables | null;
 		loading?: Loading | null;
 		panels?: Panels | null;
+		pageName?: string;
+		pageId?: string;
+	}
+
+	interface PageSettings {
+		config: Config;
+		variables: Variables;
+		panels: Panels;
+		size: Size;
 	}
 }
 

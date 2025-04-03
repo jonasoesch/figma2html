@@ -14,7 +14,7 @@
 	import DatafaceLogo from './DatafaceLogo.svelte';
 	import WindowResize from './WindowResize.svelte';
 
-	const { preview, pkg } = getContext('App');
+	const { preview, pkg, pageName } = getContext('App');
 
 	const dispatch = createEventDispatcher();
 
@@ -27,7 +27,7 @@
 	<h2>
 		<button
 			id="export"
-			class="flex h-full cursor-pointer flex-nowrap items-center rounded-none border-none bg-none py-2 px-4 text-2xs font-bold text-figma-bg hover:bg-figma-bg-success-hover active:bg-figma-bg-success-pressed disabled:cursor-not-allowed disabled:hover:opacity-100"
+			class="flex h-full cursor-pointer flex-nowrap items-center rounded-none border-none bg-none px-4 py-2 text-2xs font-bold text-figma-bg hover:bg-figma-bg-success-hover active:bg-figma-bg-success-pressed disabled:cursor-not-allowed disabled:hover:opacity-100"
 			class:bg-figma-bg-success={$preview.total > 0}
 			class:bg-figma-bg-danger={$preview.total === 0}
 			disabled={$preview.total === 0}
@@ -68,7 +68,7 @@
 			/>
 		</summary>
 		<div
-			class="menu-pane fixed right-2 bottom-14 flex flex-col rounded-lg border border-solid border-figma-border bg-figma-bg p-1"
+			class="menu-pane fixed bottom-14 right-2 flex flex-col rounded-lg border border-solid border-figma-border bg-figma-bg p-1"
 		>
 			{#each [{ href: pkg.homepage, icon: HelpCircleIcon, text: 'About' }, { href: pkg.bugs.url, icon: AlertCircleIcon, text: 'Report Issue' }, { href: 'https://github.com/the-dataface/figma2html/blob/main/CHANGELOG.md', icon: GitMergeIcon, text: `v${pkg.version}` }] as { href, icon, text }}
 				<a
