@@ -19,7 +19,11 @@ export const styles = (segment: StyledTextSegment) => {
 	}
 
 	const object = {
-		'font-family': segment.fontName.family,
+		// Replace GT America with nzz-sans-serif
+		'font-family':
+			segment.fontName.family === 'GT America'
+				? 'nzz-sans-serif, GT America, sans-serif'
+				: segment.fontName.family,
 		'font-style': segment.fontName.style.includes('Italic') ? 'italic' : 'normal',
 		'font-weight': segment.fontWeight,
 		'font-size': segment.fontSize + 'px',
