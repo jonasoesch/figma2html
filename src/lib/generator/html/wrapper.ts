@@ -52,7 +52,8 @@ export default ({ config, assets, variables }) => {
 				(config.includeGoogleFonts && fontList.length) ||
 				config.customScript
 			) {
-				code += `<script>import { onMount } from "svelte";`;
+				code += `<script>import { onMount } from "svelte";\n`;
+				code += `export let resolveImage;\n`;
 				code += `onMount(() => {`;
 				if (config.includeResizer) code += js.resizer(containerID);
 				if (config.includeGoogleFonts && fontList.length) code += js.fonts(fontList);

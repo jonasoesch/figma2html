@@ -62,7 +62,7 @@ export default ({ node, filename, widthRange, alt, config, variables }) => {
 		id: 'img-' + id,
 		class: 'f2h-img',
 		alt: alt,
-		'data-src': filename + '.' + format,
+		'data-src': "{resolveImage('" + filename.replace('img/', '') + '.' + format + "')}",
 		src: 'data:image/gif;base64,R0lGODlhCgAKAIAAAB8fHwAAACH5BAEAAAAALAAAAAAKAAoAAAIIhI+py+0PYysAOw==',
 		loading: 'lazy',
 		draggable: 'false',
