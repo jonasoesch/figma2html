@@ -646,7 +646,7 @@ const getAssets = async (
 	for (const exportable of exportables) {
 		const asset: Asset = {
 			filename: `${config.imagePath}${
-				config.imagePath.endsWith('/') ? '' : '/'
+				config.imagePath.endsWith('/') || config.imagePath === '' ? '' : '/'
 			}${exportable.parentName.substring(1)}`,
 			format: config.format,
 			size: undefined,
