@@ -37,7 +37,17 @@
 		</button>
 	</h2>
 
-	<div class="mx-2 flex gap-2">
+	<div class="mx-2 flex items-center gap-2">
+		<Button
+			id="publish"
+			class="flex h-full cursor-pointer flex-nowrap items-center gap-1 rounded-none border-none bg-none text-2xs text-figma-text"
+			on:click={() => {
+				dispatch('publish');
+			}}
+		>
+			<svelte:component this={UploadCloudIcon} size="16" />
+			Publish
+		</Button>
 		{#each [{ id: 'reset', icon: RotateCcwIcon, text: 'Reset', onClick: () => dispatch('reset-settings') }, { id: 'save', icon: SaveIcon, text: 'Save', onClick: () => dispatch('save-settings') }, { id: 'load', icon: UploadCloudIcon, text: 'Load', onClick: () => dispatch('load-settings') }] as { id, icon, text, onClick }}
 			<Button
 				{id}

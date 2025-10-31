@@ -771,6 +771,18 @@ const generateExport = async (config: Config, variables: Variables) => {
 	return;
 };
 
+// TODO: DRY with Export
+const publish = async (config: Config, variables: Variables) => {
+	const exportables = getExportables();
+	const assets = await getAssets(exportables, config, { isFinal: true });
+	const file = await getFile(config, assets, variables);
+
+	tempFrame.remove();
+
+	figma.ui.postMessage({ type: 'publish', assets, file });
+	return;
+};
+
 // Handle various messages
 figma.ui.onmessage = async (message) => {
 	let config: Config;
@@ -833,6 +845,12 @@ figma.ui.onmessage = async (message) => {
 		case 'export': {
 			variables = await Stored.variables.get();
 			await generateExport(message.config, variables);
+			break;
+		}
+
+		case 'publish': {
+			variables = await Stored.variables.get();
+			await publish(message.config, variables);
 			break;
 		}
 

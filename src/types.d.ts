@@ -76,6 +76,7 @@ declare global {
 			| 'load'
 			| 'config'
 			| 'export'
+			| 'publish'
 			| 'reset-settings'
 			| 'save-settings'
 			| 'load-settings'

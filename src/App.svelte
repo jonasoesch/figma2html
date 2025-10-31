@@ -2,6 +2,7 @@
 	import { onMount, setContext } from 'svelte';
 	import { writable } from 'svelte/store';
 	import JSZip from 'jszip/dist/jszip.min.js';
+	import { supabaseUrl, supabaseSecretKey, supabaseBucket } from './lib/env';
 
 	import Panel from './lib/components/Layout/Panel.svelte';
 	import ErrorMessage from './lib/components/ErrorMessage.svelte';
@@ -142,6 +143,41 @@
 				break;
 			}
 
+			case 'publish': {
+				try {
+					console.log('Publishing...');
+					const zipUrl = await buildZipArchive(message.assets, message.file);
+
+					const zipBlob = await fetch(zipUrl).then((r) => r.blob());
+					const path = encodeURIComponent(`${$filename}.zip`);
+					const storageUrl = `${supabaseUrl}/storage/v1/object/${supabaseBucket}/${path}`;
+
+					const response = await fetch(storageUrl, {
+						method: 'POST',
+						headers: {
+							Authorization: `Bearer ${supabaseSecretKey}`, // Use your regular API key here
+							'Content-Type': 'application/octet-stream',
+							apikey: supabaseSecretKey, // Use the same API key here
+							'x-upsert': true
+						},
+						body: zipBlob
+					});
+
+					const responseText = await response.text();
+					console.log(`Zip-Url: ${storageUrl}`);
+
+					if (!response.ok) {
+						throw new Error(`Upload failed (${response.status}): ${responseText}`);
+					}
+				} catch (error) {
+					console.error('Upload error:', error);
+					setErrorMessage(`Upload failed: ${error.message}`);
+				} finally {
+					loading.set(false);
+				}
+				break;
+			}
+
 			case 'error': {
 				setErrorMessage(message.message);
 				break;
@@ -169,6 +205,22 @@
 
 		loading.set(true);
 		postMessage({ type: 'export', config: sendConfig() });
+	};
+
+	const onSelectPublish = () => {
+		if (!$alt || $alt === '') {
+			setErrorMessage('Please enter alt text');
+			$panels.images = true;
+			return;
+		}
+
+		if (!$filename || $filename === '') {
+			setErrorMessage('File name cannot be empty');
+			return;
+		}
+
+		loading.set(true);
+		postMessage({ type: 'publish', config: sendConfig() });
 	};
 
 	const onResetSettings = () => {
@@ -305,6 +357,7 @@
 
 	<Footer
 		on:export={onSelectExport}
+		on:publish={onSelectPublish}
 		on:reset-settings={onResetSettings}
 		on:save-settings={onSaveSettings}
 		on:load-settings={onLoadSettings}
