@@ -2,7 +2,7 @@
 	import { onMount, setContext } from 'svelte';
 	import { writable } from 'svelte/store';
 	import JSZip from 'jszip/dist/jszip.min.js';
-	import { supabaseUrl, supabaseSecretKey, supabaseBucket } from './lib/env';
+	import { supabaseUrl, supabaseSecretKey, supabaseBucket } from './env';
 
 	import Panel from './lib/components/Layout/Panel.svelte';
 	import ErrorMessage from './lib/components/ErrorMessage.svelte';
@@ -165,6 +165,29 @@
 
 					const responseText = await response.text();
 					console.log(`Zip-Url: ${storageUrl}`);
+
+					// Call the Github Action through a Proxy on Supabase
+					const res = await fetch(
+						'https://owklekxndbvsydxkzmyt.supabase.co/functions/v1/GHA-proxy',
+						{
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'x-plugin-secret': 'MX.uRk66LgKUuvcQV3DWeKGTC9tTsJ'
+							},
+							body: JSON.stringify({
+								zipUrl: storageUrl,
+								id: '8abd657d2fb56657a277aadd1a374b71',
+								ref: 'main'
+							})
+						}
+					);
+
+					if (!res.ok) {
+						const msg = await res.text();
+						figma.notify(`Dispatch failed: ${res.status} ${msg.slice(0, 200)}`);
+						return;
+					}
 
 					if (!response.ok) {
 						throw new Error(`Upload failed (${response.status}): ${responseText}`);
