@@ -166,7 +166,7 @@ export default (textFrames: TextNode[], artboard: FrameNode) => {
 			}
 
 			if (currentFrame.parent && currentFrame.parent !== artboard) {
-				return getXPosition(currentFrame.parent, artboard, currentPosition);
+				return getYPosition(currentFrame.parent, artboard, currentPosition);
 			}
 			return currentPosition;
 		}
