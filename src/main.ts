@@ -56,7 +56,8 @@ const defaults = {
 		applyStyleNames: true,
 		styleTextSegments: true,
 		includeGoogleFonts: true,
-		customScript: null
+		customScript: null,
+		qElementUrl: null
 	} as Config,
 	size: { w: 960, h: 500 } as Size,
 	variables: {} as Variables,

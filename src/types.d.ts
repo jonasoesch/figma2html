@@ -9,6 +9,7 @@ declare global {
 		fluid: boolean;
 		maxWidth: number;
 		centered: boolean;
+		qElementUrl: string;
 		imagePath: string;
 		alt: string;
 		applyStyleNames: boolean;

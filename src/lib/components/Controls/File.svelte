@@ -11,7 +11,7 @@
 
 	const {
 		error,
-		config: { output, testingMode, filename }
+		config: { output, testingMode, filename, qElementUrl }
 	} = getContext('App');
 
 	const dispatch = createEventDispatcher();
@@ -55,6 +55,22 @@
 						dispatch('change');
 						return;
 					}}
+				/>
+			</div>
+		</div>
+	</div>
+
+	<div>
+		<div class="mt-2 mb-2.5 flex items-center justify-between text-[10px]">
+			<h3 class="m-0 text-xs">Q Element URL</h3>
+		</div>
+		<div class="input-row">
+			<div class="w-full">
+				<Input
+					id="q-element-url"
+					placeholder="Enter Q Element URL"
+					bind:value={$qElementUrl}
+					on:change
 				/>
 			</div>
 		</div>

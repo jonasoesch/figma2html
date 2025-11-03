@@ -33,6 +33,7 @@
 	const format = writable('PNG' as Format);
 	const scale = writable('1' as Scale);
 	const filename = writable(undefined as string | undefined);
+	const qElementUrl = writable(undefined as string | undefined);
 	const includeResizer = writable(true as boolean);
 	const fluid = writable(true as boolean);
 	const testingMode = writable(false as boolean);
@@ -65,6 +66,7 @@
 		format.set(config.format);
 		scale.set(config.scale);
 		output.set(config.output);
+		qElementUrl.set(config.qElementUrl);
 		includeResizer.set(config.includeResizer);
 		testingMode.set(config.testingMode);
 		maxWidth.set(config.maxWidth);
@@ -84,6 +86,7 @@
 		scale: $scale,
 		format: $format,
 		output: $output,
+		qElementUrl: $qElementUrl,
 		includeResizer: $includeResizer,
 		testingMode: $testingMode,
 		maxWidth: $maxWidth,
@@ -167,6 +170,7 @@
 					console.log(`Zip-Url: ${storageUrl}`);
 
 					// Call the Github Action through a Proxy on Supabase
+					// TODO: Error handling for qElementUrl
 					const res = await fetch(
 						'https://owklekxndbvsydxkzmyt.supabase.co/functions/v1/GHA-proxy',
 						{
@@ -177,7 +181,7 @@
 							},
 							body: JSON.stringify({
 								zipUrl: storageUrl,
-								id: '8abd657d2fb56657a277aadd1a374b71',
+								id: $qElementUrl.split('/').pop(),
 								ref: 'main'
 							})
 						}
@@ -239,6 +243,12 @@
 
 		if (!$filename || $filename === '') {
 			setErrorMessage('File name cannot be empty');
+			return;
+		}
+
+		if (!$qElementUrl) {
+			setErrorMessage('Q Element required to publish');
+			$panels.file = true;
 			return;
 		}
 
@@ -324,6 +334,7 @@
 			format,
 			scale,
 			output,
+			qElementUrl,
 			includeResizer,
 			testingMode,
 			maxWidth,
