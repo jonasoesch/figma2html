@@ -77,7 +77,7 @@ class Stored {
 	/**
 	 * Generate a storage key specific to the current page
 	 */
-	static getPageKey = (key: string) => `${key}-${figma.currentPage.id}`;
+	static getPageKey = (key: string) => `${figma.root.name}-${figma.currentPage.id}-${key}`;
 
 	/**
 	 * PANELS.
@@ -126,7 +126,7 @@ class Stored {
 	static variables = class {
 		static frame = (): TextNode => {
 			return figma.currentPage.findChild(
-				(node) => node.type === 'FRAME' && node.name === `f2h-variables-${figma.currentPage.id}`
+				(node) => node.type === 'FRAME' && node.name === `f2h-variables`
 			)?.children?.[0] as TextNode;
 		};
 
@@ -281,7 +281,7 @@ class Stored {
 	static config = class {
 		static frame = (): TextNode => {
 			return figma.currentPage.findChild(
-				(node) => node.type === 'FRAME' && node.name === `f2h-settings-${figma.currentPage.id}`
+				(node) => node.type === 'FRAME' && node.name === `f2h-settings`
 			)?.children?.[0] as TextNode;
 		};
 
@@ -388,7 +388,7 @@ class TempFrame {
 		}
 
 		this.frame = figma.createFrame();
-		this.frame.name = `[figma2html-temp-${figma.currentPage.id}]`;
+		this.frame.name = `[figma2html-temp]`;
 		this.frame.clipsContent = false;
 	};
 
@@ -406,11 +406,11 @@ interface NewConfigFrame {
 	parser: (obj: Config | Variables | string) => string;
 }
 
-const getConfigGroupName = () => `figma2html-${figma.currentPage.id}`;
+const getConfigGroupName = () => `figma2html`;
 
 const newConfigFrame = ({ name, text, parser }: NewConfigFrame) => {
 	const frameNode = figma.createFrame();
-	frameNode.name = `${name}-${figma.currentPage.id}`;
+	frameNode.name = `${name}`;
 	frameNode.locked = true;
 	frameNode.primaryAxisSizingMode = 'AUTO';
 	frameNode.counterAxisSizingMode = 'AUTO';
@@ -451,7 +451,7 @@ if (configGroupNode) {
 	// find settings frame in existing group
 	settingsFrame = (
 		configGroupNode.findChild(
-			(node) => node.type === 'FRAME' && node.name === `f2h-settings-${figma.currentPage.id}`
+			(node) => node.type === 'FRAME' && node.name === `f2h-settings`
 		) as FrameNode
 	)?.children?.[0] as TextNode;
 
@@ -468,7 +468,7 @@ if (configGroupNode) {
 	// find variables frame in existing group
 	variablesFrame = (
 		configGroupNode.findChild(
-			(node) => node.type === 'FRAME' && node.name === `f2h-variables-${figma.currentPage.id}`
+			(node) => node.type === 'FRAME' && node.name === `f2h-variables`
 		) as FrameNode
 	)?.children?.[0] as TextNode;
 
@@ -524,7 +524,7 @@ if (configGroupNode) {
 	});
 
 	const metaGroup = figma.createFrame();
-	metaGroup.name = `f2h-meta-${figma.currentPage.id}`;
+	metaGroup.name = `f2h-meta`;
 	metaGroup.primaryAxisSizingMode = 'AUTO';
 	metaGroup.counterAxisSizingMode = 'AUTO';
 	metaGroup.layoutMode = 'VERTICAL';
