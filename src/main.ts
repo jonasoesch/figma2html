@@ -280,7 +280,7 @@ class Stored {
 	 */
 	static config = class {
 		static frame = (): TextNode => {
-			return figma.currentPage.findChild(
+			return figma.currentPage.findOne(
 				(node) => node.type === 'FRAME' && node.name === `f2h-settings`
 			)?.children?.[0] as TextNode;
 		};
