@@ -62,7 +62,12 @@ export default ({ node, filename, widthRange, alt, config, variables }) => {
 		id: 'img-' + id,
 		class: 'f2h-img',
 		alt: alt,
-		'data-src': "{resolveImage('" + filename.split('/')[1] + '.' + format + "')}",
+		'data-src':
+			"{resolveImage('" +
+			filename.split('/')[1] +
+			'.' +
+			format +
+			"', 'assetGroups/img').replace('nzz-q-assets', 'nzz-q-assets2')}",
 		src: 'data:image/gif;base64,R0lGODlhCgAKAIAAAB8fHwAAACH5BAEAAAAALAAAAAAKAAoAAAIIhI+py+0PYysAOw==',
 		loading: 'lazy',
 		draggable: 'false',

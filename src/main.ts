@@ -45,7 +45,7 @@ const defaults = {
 		filename: slugify(figma.currentPage.name, { lower: true, strict: true }),
 		scale: '1',
 		format: 'PNG',
-		output: 'html',
+		output: 'svelte',
 		includeResizer: true,
 		testingMode: false,
 		maxWidth: null,

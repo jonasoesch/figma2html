@@ -28,7 +28,7 @@
 	const panels = writable({} as Panels);
 
 	// CONFIG
-	const output = writable('html' as Output);
+	const output = writable('svelte' as Output);
 	const format = writable('PNG' as Format);
 	const scale = writable('1' as Scale);
 	const filename = writable(undefined as string | undefined);
