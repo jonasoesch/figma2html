@@ -104,6 +104,9 @@ export default (containerId: string) => {
 		document.addEventListener('DOMContentLoaded', update);
 		window.addEventListener('resize', onResize);
 
+		const qdocreadyEvent = new Event('qdocready');
+		document.dispatchEvent(qdocreadyEvent);
+
 		return () => resizeObserver.disconnect();
 	};
 
