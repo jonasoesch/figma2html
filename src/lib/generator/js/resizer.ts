@@ -96,10 +96,15 @@ export default (containerId: string) => {
 		let waiting = !!window.IntersectionObserver;
 		let observer;
 
-		update();
+		const resizeObserver = new ResizeObserver(() => {
+			update();
+		});
+		resizeObserver.observe(container);
 
 		document.addEventListener('DOMContentLoaded', update);
 		window.addEventListener('resize', onResize);
+
+		return () => resizeObserver.disconnect();
 	};
 
 	// convert resizer function to JS source code
