@@ -20,7 +20,7 @@ declare global {
 
 	type Loading = boolean;
 
-	type Scale = '1' | '2' | '4';
+	type Scale = '1' | '2' | '3' | '4';
 
 	type Format = 'JPG' | 'PNG' | 'SVG';
 
