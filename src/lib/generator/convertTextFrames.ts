@@ -170,21 +170,25 @@ export default (textFrames: TextNode[], artboard: FrameNode) => {
 		}
 
 		// get x positioning based on horizontal alignment
+		const absoluteX = getXPosition(textFrame, artboard);
+		const absoluteY = getYPosition(textFrame, artboard);
+
+		const autoWidthPx = Math.max(0, artboard.width - absoluteX);
+		const frameWidthPx =
+			textFrame.textAutoResize === 'WIDTH_AND_HEIGHT' ? autoWidthPx : textFrame.width;
+
 		switch (textFrame.textAlignHorizontal) {
 			case 'JUSTIFIED':
 			case 'LEFT':
-				x = (getXPosition(textFrame, artboard) / artboard.width) * 100;
+				x = (absoluteX / artboard.width) * 100;
 				translateX = 0;
 				break;
 			case 'CENTER':
-				x =
-					(getXPosition(textFrame, artboard) / artboard.width +
-						+(textFrame.width / artboard.width) / 2) *
-					100;
+				x = (absoluteX / artboard.width + +(frameWidthPx / artboard.width) / 2) * 100;
 				translateX = -50;
 				break;
 			case 'RIGHT':
-				x = ((getXPosition(textFrame, artboard) + textFrame.width) / artboard.width) * 100;
+				x = ((absoluteX + frameWidthPx) / artboard.width) * 100;
 				translateX = -100;
 				break;
 		}
@@ -192,15 +196,15 @@ export default (textFrames: TextNode[], artboard: FrameNode) => {
 		// get y positioning based on vertical alignment
 		switch (textFrame.textAlignVertical) {
 			case 'TOP':
-				y = (getYPosition(textFrame, artboard) / artboard.height) * 100;
+				y = (absoluteY / artboard.height) * 100;
 				translateY = 0;
 				break;
 			case 'CENTER':
-				y = ((getYPosition(textFrame, artboard) + textFrame.height / 2) / artboard.height) * 100;
+				y = ((absoluteY + textFrame.height / 2) / artboard.height) * 100;
 				translateY = -50;
 				break;
 			case 'BOTTOM':
-				y = ((getYPosition(textFrame, artboard) + textFrame.height) / artboard.height) * 100;
+				y = ((absoluteY + textFrame.height) / artboard.height) * 100;
 				translateY = -100;
 				break;
 		}
@@ -218,10 +222,9 @@ export default (textFrames: TextNode[], artboard: FrameNode) => {
 			y: `${y.toFixed(2)}%`,
 			horizontalAlignment: textFrame.textAlignHorizontal,
 			verticalAlignment: textFrame.textAlignVertical,
-			width:
-				textFrame.textAutoResize === 'WIDTH_AND_HEIGHT'
-					? 'auto'
-					: `${((textFrame.width / artboard.width) * 100).toFixed(2)}%`,
+			width: artboard.width
+				? `${((frameWidthPx / artboard.width) * 100).toFixed(2)}%`
+				: `${frameWidthPx.toFixed(2)}px`,
 			opacity: textFrame.opacity,
 			translate: `${translateX}%, ${translateY}%`,
 			rotation: textFrame.rotation * -1,
