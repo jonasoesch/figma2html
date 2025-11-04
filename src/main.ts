@@ -404,7 +404,7 @@ interface NewConfigFrame {
 	x?: number;
 	y?: number;
 	text: Config | Variables | string;
-	parser: (obj: Config | Variables | string) => string;
+	parser: (obj: Config | Variables | string) => string; // eslint-disable-line no-unused-vars
 }
 
 const getConfigGroupName = () => `figma2html`;

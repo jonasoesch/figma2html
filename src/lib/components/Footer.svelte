@@ -14,7 +14,7 @@
 	import DatafaceLogo from './DatafaceLogo.svelte';
 	import WindowResize from './WindowResize.svelte';
 
-	const { preview, pkg, pageName } = getContext('App');
+	const { preview, pkg } = getContext('App');
 
 	const dispatch = createEventDispatcher();
 
