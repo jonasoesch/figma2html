@@ -43,7 +43,7 @@ const loadFonts = async (node: TextNode) => {
 const defaults = {
 	config: {
 		filename: slugify(figma.currentPage.name, { lower: true, strict: true }),
-		scale: '1',
+		scale: '2',
 		format: 'PNG',
 		output: 'svelte',
 		includeResizer: true,
@@ -55,7 +55,7 @@ const defaults = {
 		alt: null,
 		applyStyleNames: true,
 		styleTextSegments: true,
-		includeGoogleFonts: true,
+		includeGoogleFonts: false,
 		customScript: null,
 		qElementUrl: null
 	} as Config,
