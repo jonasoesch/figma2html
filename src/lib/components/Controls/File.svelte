@@ -39,19 +39,21 @@
 					placeholder="Enter a file name"
 					bind:value={$filename}
 					on:change={() => {
-						if ($filename === '') {
+						const raw = ($filename || '').trim();
+
+						if (raw === '') {
 							$error.message = 'File name cannot be empty';
 							dispatch('error');
 							return;
 						}
-						// if (fileName.includes("/")) {
-						//   errorMessage = "File name cannot contain '/'";
-						//   dispatch("error");
-						//   return;
-						// }
-						filename.set(
-							slugify($filename, { lower: true, strict: true, remove: /[*+~.()'"!:@]/g })
-						);
+
+						if (!/^[A-Za-z]/.test(raw)) {
+							$error.message = 'File name must start with letter';
+							dispatch('error');
+							return;
+						}
+
+						filename.set(slugify(raw, { lower: true, strict: true, remove: /[*+~.()'"!:@]/g }));
 						dispatch('change');
 						return;
 					}}

@@ -237,6 +237,12 @@
 			return;
 		}
 
+		if (!/^[A-Za-z]/.test($filename)) {
+			setErrorMessage('File name must start with a letter');
+			$panels.file = true;
+			return;
+		}
+
 		loading.set(true);
 		postMessage({ type: 'export', config: sendConfig() });
 	};
@@ -250,6 +256,12 @@
 
 		if (!$filename || $filename === '') {
 			setErrorMessage('File name cannot be empty');
+			return;
+		}
+
+		if (!/^[A-Za-z]/.test($filename)) {
+			setErrorMessage('File name must start with a letter');
+			$panels.file = true;
 			return;
 		}
 
