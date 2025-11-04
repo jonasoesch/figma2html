@@ -1,4 +1,5 @@
 export const fontList = [];
+import { mapFontFamily, mapFontWeight } from './mappings';
 
 // TODO: shouldn't this use our stringify function?
 export const styles = (segment: StyledTextSegment) => {
@@ -20,12 +21,9 @@ export const styles = (segment: StyledTextSegment) => {
 
 	const object = {
 		// Replace GT America with nzz-sans-serif
-		'font-family':
-			segment.fontName.family === 'GT America'
-				? 'nzz-sans-serif, GT America, sans-serif'
-				: segment.fontName.family,
+		'font-family': mapFontFamily(segment.fontName.family),
 		'font-style': segment.fontName.style.includes('Italic') ? 'italic' : 'normal',
-		'font-weight': segment.fontWeight,
+		'font-weight': mapFontWeight(segment.fontWeight),
 		'font-size': segment.fontSize + 'px',
 		'text-decoration': segment.textDecoration.toLowerCase(),
 		'text-transform': segment.textCase === 'ORIGINAL' ? 'none' : segment.textCase.toLowerCase(),

@@ -55,12 +55,7 @@ export default (textFrames: TextNode[], artboard: FrameNode) => {
 
 		let tag = 'p';
 
-		const baseStyle = segments[0]
-			? styleProps
-					.styles(segments[0])
-					.string.replace('font-weight: 700', 'font-weight: 400')
-					.replace('font-weight: 400', 'font-weight: 300')
-			: '';
+		const baseStyle = segments[0] ? styleProps.styles(segments[0]).string : '';
 
 		segments.forEach((seg, i) => {
 			// get styles object from included props
