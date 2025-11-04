@@ -196,6 +196,13 @@
 					if (!response.ok) {
 						throw new Error(`Upload failed (${response.status}): ${responseText}`);
 					}
+
+					console.log(res);
+					if (res.status === 204) {
+						console.log('Done');
+						// Send message to plugin code to close the UI
+						postMessage({ type: 'close' });
+					}
 				} catch (error) {
 					console.error('Upload error:', error);
 					setErrorMessage(`Upload failed: ${error.message}`);

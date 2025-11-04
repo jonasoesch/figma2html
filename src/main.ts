@@ -855,6 +855,11 @@ figma.ui.onmessage = async (message) => {
 			break;
 		}
 
+		case 'close': {
+			figma.closePlugin();
+			break;
+		}
+
 		case 'reset-settings': {
 			await Stored.config.clear();
 			await Stored.size.clear();
